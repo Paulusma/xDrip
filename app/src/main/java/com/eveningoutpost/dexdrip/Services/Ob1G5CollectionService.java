@@ -170,8 +170,8 @@ public class Ob1G5CollectionService extends G5BaseService {
     private static String transmitterIDmatchingMAC;
 
     private static String lastScanError = null;
-    public static String lastSensorStatus = null;
-    public static CalibrationState lastSensorState = null;
+    public static volatile String lastSensorStatus = null;
+    public static volatile CalibrationState lastSensorState = null;
     public static volatile long lastUsableGlucosePacketTime = 0;
     private static volatile String static_connection_state = null;
     private static long static_last_connected = 0;
@@ -316,6 +316,10 @@ public class Ob1G5CollectionService extends G5BaseService {
                             UserError.Log.d(TAG, "Skipping Scanning! : Changing state due to minimize_scanning flags");
                             changeState(CONNECT_NOW);
                         } else {
+                            if (Build.VERSION.SDK_INT >= 29) { // TODO add preference option for this
+                                UserError.Log.d(TAG, "Attempting Android 10+ workaround unbonding");
+                                unBond();
+                            }
                             scan_for_device();
                         }
                         break;
@@ -1960,7 +1964,7 @@ public class Ob1G5CollectionService extends G5BaseService {
             l.add(new StatusItem("Voltage A", bt.voltagea, bt.voltagea < LOW_BATTERY_WARNING_LEVEL ? BAD : NORMAL));
             l.add(new StatusItem("Voltage B", bt.voltageb, bt.voltageb < (LOW_BATTERY_WARNING_LEVEL - 10) ? BAD : NORMAL));
             l.add(new StatusItem("Resistance", bt.resist, bt.resist > 1400 ? BAD : (bt.resist > 1000 ? NOTICE : (bt.resist > 750 ? NORMAL : Highlight.GOOD))));
-            if (vr != null && !FirmwareCapability.isG6Rev2(vr.firmware_version_string)) {
+            if (vr != null && !FirmwareCapability.isFirmwareTemperatureCapable(vr.firmware_version_string)) {
                 l.add(new StatusItem("Temperature", bt.temperature + " \u2103"));
             }
         }
