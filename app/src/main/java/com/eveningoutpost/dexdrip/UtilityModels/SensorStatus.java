@@ -1,5 +1,6 @@
 package com.eveningoutpost.dexdrip.UtilityModels;
 
+import com.eveningoutpost.dexdrip.Models.JoH;
 import com.eveningoutpost.dexdrip.Models.Sensor;
 
 import java.text.DateFormat;
@@ -16,15 +17,10 @@ public class SensorStatus {
     public static String status() {
         final StringBuilder sensor_status = new StringBuilder();
         if (Sensor.isActive()) {
-            final Sensor sensor = Sensor.currentSensor();
-            final Date date = new Date(sensor.started_at);
-            DateFormat df = new SimpleDateFormat();
-            sensor_status.append(df.format(date));
-            sensor_status.append(" (");
-            sensor_status.append((tsl() - sensor.started_at) / Constants.DAY_IN_MS);
-            sensor_status.append("d ");
-            sensor_status.append(((tsl() - sensor.started_at) % Constants.DAY_IN_MS) / Constants.HOUR_IN_MS);
-            sensor_status.append("h)");
+            //!!!PMA using sensorage from preference iso sensor: after all this is what xDrip shows in overview
+            final int sensor_age = Pref.getInt("nfc_sensor_age", 0);
+            sensor_status.append((Pref.getBooleanDefaultFalse("nfc_age_problem") ? "Age:  unknown" :
+                    "Age: " + JoH.qs(((double) sensor_age) / 1440, 1) + "d"));
         } else {
             sensor_status.append("not available");
         }

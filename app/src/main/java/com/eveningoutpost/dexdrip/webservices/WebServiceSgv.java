@@ -1,5 +1,6 @@
 package com.eveningoutpost.dexdrip.webservices;
 
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.eveningoutpost.dexdrip.Home;
@@ -10,7 +11,10 @@ import com.eveningoutpost.dexdrip.UtilityModels.NanoStatus;
 import com.eveningoutpost.dexdrip.UtilityModels.Pref;
 import com.eveningoutpost.dexdrip.UtilityModels.SensorStatus;
 import com.eveningoutpost.dexdrip.dagger.Singleton;
+import com.eveningoutpost.dexdrip.stats.DBSearchUtil;
+import com.eveningoutpost.dexdrip.stats.StatsResult;
 import com.eveningoutpost.dexdrip.utils.DexCollectionType;
+import com.eveningoutpost.dexdrip.xdrip;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,6 +52,7 @@ public class WebServiceSgv extends BaseWebService {
         int units_indicator = 1; // show the units we are using
         String collector_status_string = null; // result of collector status
         String sensor_status_string = null; // result of collector status
+        String hba1c_string = null; // 24 hour hba1c estimate
         boolean brief = false; // whether to cut out portions of the data
 
         final Map<String, String> cgi = getQueryParameters(query);
@@ -94,6 +99,13 @@ public class WebServiceSgv extends BaseWebService {
         if (cgi.containsKey("sensor")) {
             UserError.Log.d(TAG,"Received sensor status request");
             sensor_status_string = SensorStatus.status();
+        }
+
+        if (cgi.containsKey("hba1c")) {
+            UserError.Log.d(TAG,"Received hba1c request");
+//            StatsResult statsResult = new StatsResult(PreferenceManager.getDefaultSharedPreferences(xdrip.getAppContext()), DBSearchUtil.getTodayTimestamp(),System.currentTimeMillis());
+            StatsResult statsResult = new StatsResult(PreferenceManager.getDefaultSharedPreferences(xdrip.getAppContext()), true);
+            hba1c_string = statsResult.getA1cIFCC();
         }
 
         if (cgi.containsKey("brief_mode")) {
@@ -182,6 +194,11 @@ public class WebServiceSgv extends BaseWebService {
                     if (sensor_status_string != null) {
                         item.put("sensor_status", sensor_status_string);
                         sensor_status_string = null;
+                    }
+
+                    if(hba1c_string != null){
+                        item.put("hba1c", hba1c_string);
+                        hba1c_string = null;
                     }
 
                     reply.put(item);
